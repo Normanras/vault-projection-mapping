@@ -74,7 +74,7 @@ VAULT is a single HTML file with zero dependencies. To run it locally:
 
 ## License
 
-MIT License — free to use, modify, and distribute.
+GPL-3.0 License — free to use, modify, and distribute. If you share a modified version, it must also be open source.
 
 ## Support
 
