@@ -204,6 +204,47 @@
     .zoom-minimap{top:32px;left:6px;}
     .minimap-container{width:100px;}
   }
+  /* ── COMBINED: interactive overlay ── */
+  .btn.sm{font-size:10px;padding:5px 10px;}
+  .btn.xs{font-size:9px;padding:3px 7px;}
+  .path-input{flex:1;min-width:0;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:10px;padding:5px 8px;border-radius:var(--radius);outline:none;}
+  .path-input:focus{border-color:rgba(0,230,118,.35);}
+  .path-input::placeholder{color:rgba(255,255,255,.18);}
+  #overlay-layer{position:absolute;inset:0;z-index:9;pointer-events:none;overflow:hidden;}
+  #overlay-layer.stamp-mode{cursor:crosshair;pointer-events:auto;}
+  .instance{position:absolute;cursor:pointer;user-select:none;pointer-events:auto;}
+  .instance img{width:100%;height:100%;display:block;pointer-events:none;object-fit:contain;}
+  .instance-body{position:absolute;inset:0;pointer-events:none;border-radius:2px;}
+  .instance:hover .instance-body{outline:1.5px solid rgba(0,230,118,.5);outline-offset:2px;}
+  .instance.ix-selected .instance-body{outline:1.5px solid var(--accent);outline-offset:2px;}
+  .inst-rh{position:absolute;bottom:-5px;right:-5px;width:11px;height:11px;background:var(--accent);border:1.5px solid #000;border-radius:2px;cursor:se-resize;z-index:5;opacity:0;transition:opacity .15s;pointer-events:auto;}
+  .instance:hover .inst-rh,.instance.ix-selected .inst-rh{opacity:1;}
+  .inst-dh{position:absolute;top:-7px;right:-7px;width:15px;height:15px;background:var(--accent2);border:1.5px solid #000;border-radius:50%;cursor:pointer;z-index:6;opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;pointer-events:auto;}
+  .instance:hover .inst-dh,.instance.ix-selected .inst-dh{opacity:1;}
+  .inst-ch{position:absolute;top:-7px;left:-7px;width:15px;height:15px;background:var(--accent3);border:1.5px solid #000;border-radius:50%;cursor:pointer;z-index:6;opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000;pointer-events:auto;}
+  .instance:hover .inst-ch,.instance.ix-selected .inst-ch{opacity:1;}
+  #overlay-layer.stamp-mode .inst-rh,#overlay-layer.stamp-mode .inst-dh,#overlay-layer.stamp-mode .inst-ch{display:none;}
+  #ix-stamp-banner{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,.88);border:1px solid rgba(0,230,118,.35);border-radius:var(--radius);padding:7px 16px;font-size:10px;color:var(--accent);letter-spacing:.5px;backdrop-filter:blur(8px);display:none;align-items:center;gap:10px;white-space:nowrap;}
+  #ix-stamp-banner.visible{display:flex;}
+  .ix-section{display:flex;flex-direction:column;gap:8px;}
+  .ix-type-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:7px;}
+  .ix-type-card.stamping{border-color:rgba(0,230,118,.4);background:rgba(0,230,118,.03);}
+  .ix-type-header{display:flex;align-items:center;gap:6px;}
+  .ix-type-name{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:11px;font-weight:500;padding:5px 8px;border-radius:6px;outline:none;}
+  .ix-type-name:focus{border-color:rgba(0,230,118,.3);}
+  .ix-states-list{display:flex;flex-direction:column;gap:4px;}
+  .ix-state-row{display:flex;align-items:center;gap:5px;}
+  .ix-state-num{font-size:9px;color:var(--muted);width:12px;flex-shrink:0;text-align:right;}
+  .ix-state-path{flex:1;min-width:0;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:9px;padding:4px 6px;border-radius:5px;outline:none;}
+  .ix-state-path:focus{border-color:rgba(0,230,118,.3);}
+  .ix-state-thumb{width:24px;height:24px;flex-shrink:0;border-radius:3px;border:1px solid var(--border);background:rgba(255,255,255,.03);object-fit:contain;display:none;}
+  .ix-state-thumb.visible{display:block;}
+  .ix-type-footer{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+  .ix-count{font-size:9px;color:var(--muted);}
+  .ix-stamp-btn{font-size:10px;padding:5px 10px;}
+  .ix-stamp-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600;}
+  .audio-track-name{font-size:9px;color:var(--muted);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.3px;}
+
 </style>
 </head>
 <body>
@@ -246,6 +287,7 @@
   <video id="vid-b0" class="hidden-video" playsinline preload="auto"></video>
   <video id="vid-b1" class="hidden-video" playsinline preload="auto"></video>
   <canvas id="canvas-el"></canvas>
+  <div id="overlay-layer"></div>
   <svg id="quad-overlay" width="100%" height="100%"></svg>
   <div id="pin-container"></div>
   <div class="grid-dot" id="grid-dot-1"></div>
@@ -271,9 +313,26 @@
       <button class="zoom-btn reset" id="zoom-fit">Reset</button>
     </div>
   </div>
+  <div id="ix-stamp-banner">
+    <span style="font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;">Stamping</span>
+    <span id="ix-stamp-type-name" style="font-weight:600;font-size:12px;"></span>
+    <span id="ix-stamp-size-info" style="font-size:9px;color:var(--accent3);letter-spacing:.5px;"></span>
+    <span style="color:rgba(255,255,255,.25);font-size:9px;">— click to place</span>
+    <button class="btn xs danger" id="ix-stamp-cancel">✕ Cancel</button>
+  </div>
 </div>
 
 <div id="sidebar">
+  <!-- Asset Types (Interactive Overlay) -->
+  <div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">
+      <span style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:500;flex:1;">⬡ Asset Types</span>
+      <button class="btn xs" id="ix-add-type">+ Add</button>
+    </div>
+    <div class="ix-section" id="ix-type-list"></div>
+    <p id="ix-no-types" style="font-size:10px;color:rgba(255,255,255,.2);text-align:center;padding:8px 0;display:block;">No asset types yet. Click + Add to create one.</p>
+  </div>
+
   <div>
     <div class="section-label">Color Presets</div>
     <div class="preset-row" id="preset-row"></div>
@@ -351,7 +410,25 @@
   </div>
   <div>
     <div class="section-label">Audio</div>
-    <button class="btn" id="mute-btn" style="width:100%;font-size:10px;">🔊 Mute All</button>
+    <button class="btn" id="mute-btn" style="width:100%;font-size:10px;margin-bottom:8px;">🔊 Mute All</button>
+    <div style="border-top:1px solid var(--border);padding-top:8px;">
+      <div style="font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:500;margin-bottom:6px;">Ambient Audio</div>
+      <div style="display:flex;gap:5px;">
+        <input type="text" class="path-input" id="bg-audio-path" placeholder="Audio file path…">
+        <button class="btn xs" id="bg-audio-browse">↑</button>
+      </div>
+      <div class="audio-track-name" id="bg-audio-track">No file loaded</div>
+      <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;">
+        <button class="btn xs" id="bg-audio-play">▶ Play</button>
+        <button class="btn xs" id="bg-audio-pause">⏸ Pause</button>
+        <button class="btn xs" id="bg-audio-loop">↺ Loop</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+        <label style="font-size:9px;color:var(--muted);flex-shrink:0;">Vol</label>
+        <input type="range" id="bg-audio-vol" min="0" max="100" value="80" style="-webkit-appearance:none;flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;outline:none;cursor:pointer;">
+        <span id="bg-audio-vol-val" style="font-size:9px;color:var(--accent);width:28px;text-align:right;">80%</span>
+      </div>
+    </div>
   </div>
   <div class="map-controls" id="map-controls">
     <div class="section-label" style="color:var(--accent3);">◈ Quad Map</div>
@@ -1510,9 +1587,9 @@ document.getElementById('preview-btn').addEventListener('click',()=>{
 });
 
 // Save/Load
-document.getElementById('save-btn').addEventListener('click',()=>{const project={v:8,params:{...params},atmo:{...atmo},atmoIntensity,zoom:{level:zoom.level,panX:zoom.panX,panY:zoom.panY},fog:{enabled:fogState.enabled,brushSize:fogState.brushSize,clipFog:(function(){saveFogForClip();const out={};Object.keys(fogStore).forEach(k=>{out[k]=fogStore[k].strokes;});return out;})()},grid:{cellW:grid.cellW,cellH:grid.cellH,originX:grid.originX,originY:grid.originY,angle:grid.angle,mode:grid.mode,show:grid.show,opacity:grid.opacity,color:grid.color,_ux:grid._ux,_uy:grid._uy,_vx:grid._vx,_vy:grid._vy,clipGrid:(function(){saveGridForClip();const out={};Object.keys(gridStore).forEach(k=>{out[k]={...gridStore[k]};});return out;})()},tokens:(function(){saveTokensForClip();const out={};Object.keys(tokenStore).forEach(k=>{out[k]=tokenStore[k];});return out;})(),mapPoints:JSON.parse(JSON.stringify(savedMapPoints||mapPoints)),mapActive,layers:{a:{opacity:layers.a.opacity,volume:layers.a.volume,clipNames:layers.a.clips.map(c=>c?{name:c.name,isImage:c.isImage}:null)},b:{opacity:layers.b.opacity,volume:layers.b.volume,clipNames:layers.b.clips.map(c=>c?{name:c.name,isImage:c.isImage}:null)}}};const blob=new Blob([JSON.stringify(project,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='vault-project.vault';a.click();URL.revokeObjectURL(a.href);});
+document.getElementById('save-btn').addEventListener('click',()=>{const project={v:8,params:{...params},atmo:{...atmo},atmoIntensity,zoom:{level:zoom.level,panX:zoom.panX,panY:zoom.panY},fog:{enabled:fogState.enabled,brushSize:fogState.brushSize,clipFog:(function(){saveFogForClip();const out={};Object.keys(fogStore).forEach(k=>{out[k]=fogStore[k].strokes;});return out;})()},grid:{cellW:grid.cellW,cellH:grid.cellH,originX:grid.originX,originY:grid.originY,angle:grid.angle,mode:grid.mode,show:grid.show,opacity:grid.opacity,color:grid.color,_ux:grid._ux,_uy:grid._uy,_vx:grid._vx,_vy:grid._vy,clipGrid:(function(){saveGridForClip();const out={};Object.keys(gridStore).forEach(k=>{out[k]={...gridStore[k]};});return out;})()},tokens:(function(){saveTokensForClip();const out={};Object.keys(tokenStore).forEach(k=>{out[k]=tokenStore[k];});return out;})(),mapPoints:JSON.parse(JSON.stringify(savedMapPoints||mapPoints)),mapActive,interactive:window._getIxData?window._getIxData():undefined,layers:{a:{opacity:layers.a.opacity,volume:layers.a.volume,clipNames:layers.a.clips.map(c=>c?{name:c.name,isImage:c.isImage}:null)},b:{opacity:layers.b.opacity,volume:layers.b.volume,clipNames:layers.b.clips.map(c=>c?{name:c.name,isImage:c.isImage}:null)}}};const blob=new Blob([JSON.stringify(project,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='vault-project.vault';a.click();URL.revokeObjectURL(a.href);});
 document.getElementById('load-btn').addEventListener('click',()=>projInput.click());
-projInput.addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{const proj=JSON.parse(ev.target.result);if(proj.params)Object.entries(proj.params).forEach(([k,v])=>{params[k]=v;});syncSliders();document.getElementById('scale').value=Math.round(params.scale*100);document.getElementById('scale-val').textContent=params.scale.toFixed(1);document.getElementById('rotate').value=params.rotate;document.getElementById('rotate-val').textContent=params.rotate+'°';document.getElementById('speed').value=Math.round(params.speed*100);document.getElementById('speed-val').textContent=params.speed.toFixed(1);if(proj.atmo)Object.entries(proj.atmo).forEach(([k,v])=>{atmo[k]=v;});if(proj.atmoIntensity!==undefined){atmoIntensity=proj.atmoIntensity;document.getElementById('atmo-intensity').value=Math.round(atmoIntensity*100);document.getElementById('atmo-intensity-val').textContent=Math.round(atmoIntensity*100)+'%';}document.querySelectorAll('.fx-btn[data-atmo]').forEach(b=>b.classList.toggle('on',!!atmo[b.dataset.atmo]));if(proj.mapPoints){mapPoints=proj.mapPoints;savedMapPoints=JSON.parse(JSON.stringify(proj.mapPoints));}if(proj.mapActive!==undefined)mapActive=proj.mapActive;if(proj.zoom){zoom.level=proj.zoom.level||1;zoom.panX=proj.zoom.panX||.5;zoom.panY=proj.zoom.panY||.5;updateZoomUI();}if(proj.fog){fogState.enabled=!!proj.fog.enabled;fogState.brushSize=proj.fog.brushSize||40;document.getElementById('fog-toggle').textContent=fogState.enabled?'Disable':'Enable';document.getElementById('fog-toggle').classList.toggle('active',fogState.enabled);document.getElementById('fog-tools').style.display=fogState.enabled?'block':'none';document.getElementById('fog-brush-size').value=fogState.brushSize;document.getElementById('fog-brush-val').textContent=fogState.brushSize;if(proj.fog.clipFog){Object.keys(proj.fog.clipFog).forEach(k=>{fogStore[k]={strokes:proj.fog.clipFog[k],w:0,h:0,imgData:null};});setTimeout(()=>{loadFogForClip();if(fogStrokes.length>0&&ensureFogMask())replayFogStrokes(fogStrokes);},300);}}if(proj.grid){grid.cellW=proj.grid.cellW||0;grid.cellH=proj.grid.cellH||0;grid.originX=proj.grid.originX||0;grid.originY=proj.grid.originY||0;grid.angle=proj.grid.angle||0;grid.mode=proj.grid.mode||2;grid.show=!!proj.grid.show;grid.opacity=proj.grid.opacity||.4;grid.color=proj.grid.color||'#ffffff';if(proj.grid._ux!==undefined){grid._ux=proj.grid._ux;grid._uy=proj.grid._uy;grid._vx=proj.grid._vx;grid._vy=proj.grid._vy;}if(proj.grid.clipGrid){Object.keys(proj.grid.clipGrid).forEach(k=>{gridStore[k]={...proj.grid.clipGrid[k]};});}syncGridUI();}if(proj.tokens){Object.keys(proj.tokens).forEach(k=>{tokenStore[k]=proj.tokens[k];});loadTokensForClip();}if(proj.layers){['a','b'].forEach(lid=>{const ls=proj.layers[lid];if(!ls)return;layers[lid].opacity=ls.opacity;layers[lid].volume=ls.volume;document.getElementById('opacity-'+lid).value=Math.round(ls.opacity*100);document.getElementById('opacity-'+lid+'-val').textContent=Math.round(ls.opacity*100);document.getElementById('vol-'+lid).value=Math.round(ls.volume*100);document.getElementById('vol-'+lid+'-val').textContent=Math.round(ls.volume*100);});}alert('Project loaded! Re-import clips into matching slots.');}catch(err){alert('Invalid file.');}};reader.readAsText(file);projInput.value='';});
+projInput.addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{const proj=JSON.parse(ev.target.result);if(proj.params)Object.entries(proj.params).forEach(([k,v])=>{params[k]=v;});syncSliders();document.getElementById('scale').value=Math.round(params.scale*100);document.getElementById('scale-val').textContent=params.scale.toFixed(1);document.getElementById('rotate').value=params.rotate;document.getElementById('rotate-val').textContent=params.rotate+'°';document.getElementById('speed').value=Math.round(params.speed*100);document.getElementById('speed-val').textContent=params.speed.toFixed(1);if(proj.atmo)Object.entries(proj.atmo).forEach(([k,v])=>{atmo[k]=v;});if(proj.atmoIntensity!==undefined){atmoIntensity=proj.atmoIntensity;document.getElementById('atmo-intensity').value=Math.round(atmoIntensity*100);document.getElementById('atmo-intensity-val').textContent=Math.round(atmoIntensity*100)+'%';}document.querySelectorAll('.fx-btn[data-atmo]').forEach(b=>b.classList.toggle('on',!!atmo[b.dataset.atmo]));if(proj.mapPoints){mapPoints=proj.mapPoints;savedMapPoints=JSON.parse(JSON.stringify(proj.mapPoints));}if(proj.mapActive!==undefined)mapActive=proj.mapActive;if(proj.zoom){zoom.level=proj.zoom.level||1;zoom.panX=proj.zoom.panX||.5;zoom.panY=proj.zoom.panY||.5;updateZoomUI();}if(proj.fog){fogState.enabled=!!proj.fog.enabled;fogState.brushSize=proj.fog.brushSize||40;document.getElementById('fog-toggle').textContent=fogState.enabled?'Disable':'Enable';document.getElementById('fog-toggle').classList.toggle('active',fogState.enabled);document.getElementById('fog-tools').style.display=fogState.enabled?'block':'none';document.getElementById('fog-brush-size').value=fogState.brushSize;document.getElementById('fog-brush-val').textContent=fogState.brushSize;if(proj.fog.clipFog){Object.keys(proj.fog.clipFog).forEach(k=>{fogStore[k]={strokes:proj.fog.clipFog[k],w:0,h:0,imgData:null};});setTimeout(()=>{loadFogForClip();if(fogStrokes.length>0&&ensureFogMask())replayFogStrokes(fogStrokes);},300);}}if(proj.grid){grid.cellW=proj.grid.cellW||0;grid.cellH=proj.grid.cellH||0;grid.originX=proj.grid.originX||0;grid.originY=proj.grid.originY||0;grid.angle=proj.grid.angle||0;grid.mode=proj.grid.mode||2;grid.show=!!proj.grid.show;grid.opacity=proj.grid.opacity||.4;grid.color=proj.grid.color||'#ffffff';if(proj.grid._ux!==undefined){grid._ux=proj.grid._ux;grid._uy=proj.grid._uy;grid._vx=proj.grid._vx;grid._vy=proj.grid._vy;}if(proj.grid.clipGrid){Object.keys(proj.grid.clipGrid).forEach(k=>{gridStore[k]={...proj.grid.clipGrid[k]};});}syncGridUI();}if(proj.tokens){Object.keys(proj.tokens).forEach(k=>{tokenStore[k]=proj.tokens[k];});loadTokensForClip();}if(proj.interactive&&window._applyIxData)window._applyIxData(proj.interactive);if(proj.layers){['a','b'].forEach(lid=>{const ls=proj.layers[lid];if(!ls)return;layers[lid].opacity=ls.opacity;layers[lid].volume=ls.volume;document.getElementById('opacity-'+lid).value=Math.round(ls.opacity*100);document.getElementById('opacity-'+lid+'-val').textContent=Math.round(ls.opacity*100);document.getElementById('vol-'+lid).value=Math.round(ls.volume*100);document.getElementById('vol-'+lid+'-val').textContent=Math.round(ls.volume*100);});}alert('Project loaded! Re-import clips into matching slots.');}catch(err){alert('Invalid file.');}};reader.readAsText(file);projInput.value='';});
 
 // Progress
 function updateProgressBars(){['a','b'].forEach(lid=>{const layer=layers[lid];if(layer.activeIdx<0)return;const db=layer.db;if(db.isImage)return;const dur=db.duration;if(!dur||dur===Infinity)return;const slot=getSlotEl(lid,layer.activeIdx),bar=slot.querySelector('.clip-progress');if(bar)bar.style.width=Math.min(100,(db.currentTime/dur)*100)+'%';});}
@@ -1567,7 +1644,7 @@ function drawPreviewFrame(){
 function drawFrame(tc,tcan,isDM){const W=tcan.width,H=tcan.height;if(blackout){tc.fillStyle='#000';tc.fillRect(0,0,W,H);return;}tc.clearRect(0,0,W,H);tc.fillStyle='#000';tc.fillRect(0,0,W,H);tc.save();tc.filter=getFilterString();if(mapActive||mapMode){const off=getOffscreen(W,H);off.x.clearRect(0,0,W,H);off.x.fillStyle='#000';off.x.fillRect(0,0,W,H);compositeLayers(off.x,W,H);drawGridMasked(off.x,W,H);drawFogOverlay(off.x,W,H,isDM);drawTokens(off.x,W,H,isDM);tc.clearRect(0,0,W,H);tc.fillStyle='#000';tc.fillRect(0,0,W,H);drawMappedWarp(tc,W,H,off.c);tc.restore();drawPostFX(tc,W,H);return;}const cx=W/2,cy=H/2;tc.translate(cx,cy);tc.rotate(params.rotate*Math.PI/180);tc.scale(params.scale,params.scale);tc.translate(-cx,-cy);compositeLayers(tc,W,H);drawGridMasked(tc,W,H);drawFogOverlay(tc,W,H,isDM);drawTokens(tc,W,H,isDM);tc.restore();drawPostFX(tc,W,H);}
 let bgInterval=null;
 function startRender(){canvas.width=previewArea.clientWidth;canvas.height=previewArea.clientHeight;let mmCounter=0;
-function loop(){dbA.tick();dbB.tick();drawFrame(ctx,canvas,true);if(projCtx&&projCanvas)drawFrame(projCtx,projCanvas,false);if(prevCtx&&prevCanvas&&previewWindow&&!previewWindow.closed&&mmCounter%2===0)drawPreviewFrame();updateProgressBars();if(++mmCounter%60===0){updateMinimapThumb();updateZoomUI();if(grid.calibrating>0)updateGridDots();}
+function loop(){dbA.tick();dbB.tick();drawFrame(ctx,canvas,true);if(projCtx&&projCanvas){drawFrame(projCtx,projCanvas,false);if(window._drawOverlay)window._drawOverlay(projCtx,projCanvas.width,projCanvas.height);}if(prevCtx&&prevCanvas&&previewWindow&&!previewWindow.closed&&mmCounter%2===0)drawPreviewFrame();if(window._drawOverlay&&prevCtx&&prevCanvas)window._drawOverlay(prevCtx,prevCanvas.width,prevCanvas.height);updateProgressBars();if(++mmCounter%60===0){updateMinimapThumb();updateZoomUI();if(grid.calibrating>0)updateGridDots();}
 if(!document.hidden){animFrame=requestAnimationFrame(loop);}
 }
 function bgLoop(){if(!animFrame&&document.hidden){loop();}}
@@ -1818,19 +1895,418 @@ Laptop (VAULT controls) → Projector → Table Surface<br>
 w.document.close();
 });
 
+
+// ═══════════════════════════════════════════════════════════════
+//  INTERACTIVE OVERLAY — Asset Types, Instances & Stamp Mode
+// ═══════════════════════════════════════════════════════════════
+(function(){
+
+// ── State ──
+let assetTypes = [];
+let instances  = [];          // always === instancesBySlot[currentSlotKey()] after any switchSlot()
+let instancesBySlot = {};     // slot-key → instance array (e.g. "a-0", "b-2")
+const instanceDivs = new Map();
+let stampTypeId = null, stampW = 0.08, stampH = 0.08;
+let selectedInstId = null, instInteraction = null;
+let ixNextId = 1;
+function ixUid(p){ return p+'-'+(ixNextId++); }
+
+// ── DOM Refs ──
+const overlayLayer   = document.getElementById('overlay-layer');
+const ixStampBanner  = document.getElementById('ix-stamp-banner');
+const ixStampTypeName= document.getElementById('ix-stamp-type-name');
+const ixStampSizeInfo= document.getElementById('ix-stamp-size-info');
+const ixTypeList     = document.getElementById('ix-type-list');
+const ixNoTypes      = document.getElementById('ix-no-types');
+const ixAddTypeBtn   = document.getElementById('ix-add-type');
+document.getElementById('ix-stamp-cancel').addEventListener('click', ()=>setStampType(null));
+
+// ── Image path resolver ──
+function resolveImgPath(path){
+  return new Promise(resolve=>{
+    const img=new Image(); img.onload=()=>resolve(img.src); img.onerror=()=>resolve(null); img.src=path;
+  });
+}
+
+// ── Asset type management ──
+function addAssetType(){
+  if(assetTypes.length>=5)return;
+  assetTypes.push({id:ixUid('at'),name:'Asset '+(assetTypes.length+1),states:[{path:'',src:null},{path:'',src:null}]});
+  renderIxSidebar();
+}
+function removeAssetType(id){
+  assetTypes=assetTypes.filter(t=>t.id!==id);
+  filterInstances(i=>i.typeId!==id);
+  // Remove from all other slots too
+  const ck=currentSlotKey();
+  Object.keys(instancesBySlot).forEach(k=>{if(k!==ck)instancesBySlot[k]=instancesBySlot[k].filter(i=>i.typeId!==id);});
+  if(stampTypeId===id)setStampType(null); else renderIxSidebar();
+  renderInstances();
+}
+function addStateToType(typeId){
+  const t=assetTypes.find(t=>t.id===typeId); if(!t||t.states.length>=5)return;
+  t.states.push({path:'',src:null}); renderIxSidebar();
+}
+function removeStateFromType(typeId){
+  const t=assetTypes.find(t=>t.id===typeId); if(!t||t.states.length<=1)return;
+  t.states.pop();
+  const clampState=i=>{if(i.typeId===typeId&&i.state>=t.states.length)i.state=0;};
+  instances.forEach(clampState);
+  Object.keys(instancesBySlot).forEach(k=>{if(k!==currentSlotKey())instancesBySlot[k].forEach(clampState);});
+  renderIxSidebar(); renderInstances();
+}
+async function setStatePath(typeId,idx,raw){
+  const t=assetTypes.find(t=>t.id===typeId); if(!t)return;
+  const s=t.states[idx]; s.path=raw; s.src=null;
+  if(!raw){updateThumb(typeId,idx);refreshTypeImages(typeId);return;}
+  s.src=await resolveImgPath(raw);
+  updateThumb(typeId,idx); refreshTypeImages(typeId);
+}
+function updateThumb(typeId,idx){
+  const thumb=ixTypeList.querySelector(`.ix-state-thumb[data-tid="${typeId}"][data-sidx="${idx}"]`);
+  if(!thumb)return;
+  const t=assetTypes.find(t=>t.id===typeId); const s=t&&t.states[idx];
+  if(s&&s.src){thumb.src=s.src;thumb.classList.add('visible');} else thumb.classList.remove('visible');
+}
+function refreshTypeImages(typeId){
+  const t=assetTypes.find(t=>t.id===typeId);
+  instances.forEach(inst=>{
+    if(inst.typeId!==typeId)return;
+    const el=instanceDivs.get(inst.id); if(!el)return;
+    const img=el.querySelector('img'); const s=t&&t.states[inst.state];
+    if(img)img.src=(s&&s.src)?s.src:'';
+  });
+}
+
+// ── Zoom coordinate helpers ──
+function getSourceInfo(){
+  const W=previewArea.clientWidth,H=previewArea.clientHeight;
+  const src=dbA.getDrawable()||dbB.getDrawable();
+  if(!src){return{W,H,dr:{x:0,y:0,w:W,h:H},z:1,vx0:0,vy0:0,a:1,b:1,bx:0,by:0,valid:false};}
+  const sw=src.videoWidth||src.naturalWidth||src.width||1;
+  const sh=src.videoHeight||src.naturalHeight||src.height||1;
+  const dr=calcFitRect(sw,sh,W,H);
+  const z=zoom.level,vx0=zoom.panX-.5/z,vy0=zoom.panY-.5/z;
+  const a=dr.w/W,b=dr.h/H,bx=dr.x/W,by=dr.y/H;
+  return{W,H,dr,z,vx0,vy0,a,b,bx,by,valid:true};
+}
+function srcToScreen(si,u,v,uw,uh){
+  const sx=si.bx+(u-si.vx0)*si.z*si.a;
+  const sy=si.by+(v-si.vy0)*si.z*si.b;
+  const sw=uw*si.z*si.a,sh=uh*si.z*si.b;
+  return{sx,sy,sw,sh};
+}
+function screenToSrc(si,fx,fy){
+  const u=(fx-si.bx)/(si.z*si.a)+si.vx0;
+  const v=(fy-si.by)/(si.z*si.b)+si.vy0;
+  return{u,v};
+}
+function positionInstEl(el,inst){
+  const si=getSourceInfo();
+  const{sx,sy,sw,sh}=srcToScreen(si,inst.x,inst.y,inst.w,inst.h);
+  el.style.left=(sx*100)+'%';el.style.top=(sy*100)+'%';
+  el.style.width=(sw*100)+'%';el.style.height=(sh*100)+'%';
+}
+function repositionInstances(){
+  instances.forEach(inst=>{
+    if(instInteraction&&instInteraction.id===inst.id)return; // skip actively dragged/resized
+    const el=instanceDivs.get(inst.id);if(el)positionInstEl(el,inst);
+  });
+}
+
+// ── Per-slot instance management ──
+function currentSlotKey(){
+  if(layers.a.activeIdx>=0)return 'a-'+layers.a.activeIdx;
+  if(layers.b.activeIdx>=0)return 'b-'+layers.b.activeIdx;
+  return null;
+}
+function filterInstances(pred){
+  instances=instances.filter(pred);
+  const k=currentSlotKey();if(k)instancesBySlot[k]=instances;
+}
+function switchSlot(){
+  const k=currentSlotKey();
+  if(k&&!instancesBySlot[k])instancesBySlot[k]=[];
+  instanceDivs.forEach(el=>el.remove());instanceDivs.clear();
+  selectedInstId=null;instInteraction=null;
+  instances=k?instancesBySlot[k]:[];
+  renderInstances();renderIxSidebar();
+}
+
+// ── Stamp mode ──
+function setStampType(id,w,h){
+  stampTypeId=id; stampW=w||0.08; stampH=h||0.08;
+  if(id){
+    const t=assetTypes.find(t=>t.id===id);
+    ixStampTypeName.textContent=t?t.name:'';
+    ixStampSizeInfo.textContent=(w&&h)?`${Math.round(w*100)}%×${Math.round(h*100)}%`:'';
+    ixStampBanner.classList.add('visible'); overlayLayer.classList.add('stamp-mode');
+  } else {
+    ixStampBanner.classList.remove('visible'); overlayLayer.classList.remove('stamp-mode');
+  }
+  renderIxSidebar();
+}
+
+overlayLayer.addEventListener('pointerdown',e=>{
+  if(!stampTypeId||e.button!==0)return;
+  const rect=overlayLayer.getBoundingClientRect();
+  placeInstance((e.clientX-rect.left)/rect.width,(e.clientY-rect.top)/rect.height);
+});
+
+// ── Instance management ──
+function placeInstance(fx,fy){
+  const si=getSourceInfo();
+  const{u,v}=screenToSrc(si,fx,fy);
+  const W=stampW,H=stampH,id=ixUid('inst');
+  instances.push({id,typeId:stampTypeId,x:Math.max(0,Math.min(1-W,u-W/2)),y:Math.max(0,Math.min(1-H,v-H/2)),w:W,h:H,state:0});
+  renderInstances(); renderIxSidebar();
+}
+function removeInstance(id){
+  filterInstances(i=>i.id!==id);
+  if(selectedInstId===id)selectedInstId=null;
+  const el=instanceDivs.get(id); if(el){el.remove();instanceDivs.delete(id);}
+  renderIxSidebar();
+}
+function cycleState(id){
+  const inst=instances.find(i=>i.id===id); if(!inst)return;
+  const t=assetTypes.find(t=>t.id===inst.typeId); if(!t)return;
+  inst.state=(inst.state+1)%t.states.length;
+  const el=instanceDivs.get(id); if(!el)return;
+  const img=el.querySelector('img'); const s=t.states[inst.state];
+  if(img)img.src=(s&&s.src)?s.src:'';
+}
+
+// ── Render instances ──
+function renderInstances(){
+  for(const [id,el] of instanceDivs){if(!instances.find(i=>i.id===id)){el.remove();instanceDivs.delete(id);}}
+  instances.forEach(inst=>{
+    const t=assetTypes.find(t=>t.id===inst.typeId); const s=t?t.states[inst.state]:null;
+    let el=instanceDivs.get(inst.id);
+    if(!el){
+      el=document.createElement('div'); el.className='instance'; el.dataset.id=inst.id;
+      const img=document.createElement('img'); img.alt=''; el.appendChild(img);
+      const body=document.createElement('div'); body.className='instance-body'; el.appendChild(body);
+      const rh=document.createElement('div'); rh.className='inst-rh';
+      rh.addEventListener('pointerdown',e=>onResizePD(e,inst.id)); el.appendChild(rh);
+      const dh=document.createElement('div'); dh.className='inst-dh'; dh.textContent='×';
+      dh.addEventListener('pointerdown',e=>e.stopPropagation());
+      dh.addEventListener('click',e=>{e.stopPropagation();removeInstance(inst.id);}); el.appendChild(dh);
+      const ch=document.createElement('div'); ch.className='inst-ch'; ch.textContent='⧉'; ch.title='Stamp at this size (Ctrl+C)';
+      ch.addEventListener('pointerdown',e=>e.stopPropagation());
+      ch.addEventListener('click',e=>{e.stopPropagation();const cur=instances.find(i=>i.id===inst.id);if(cur)setStampType(cur.typeId,cur.w,cur.h);}); el.appendChild(ch);
+      el.addEventListener('pointerdown',e=>onInstPD(e,inst.id));
+      overlayLayer.appendChild(el); instanceDivs.set(inst.id,el);
+    }
+    positionInstEl(el,inst);
+    const img=el.querySelector('img'); if(img)img.src=(s&&s.src)?s.src:'';
+    el.classList.toggle('ix-selected',inst.id===selectedInstId);
+  });
+}
+function updateInstSelectedHighlights(){instanceDivs.forEach((el,id)=>el.classList.toggle('ix-selected',id===selectedInstId));}
+
+// ── Instance interaction ──
+function onInstPD(e,id){
+  if(e.button!==0)return;
+  if(stampTypeId)return;
+  e.stopPropagation();
+  selectedInstId=id;
+  const inst=instances.find(i=>i.id===id); if(!inst)return;
+  const si=getSourceInfo();
+  instInteraction={type:'drag',id,startX:e.clientX,startY:e.clientY,origX:inst.x,origY:inst.y,moved:false,si};
+  instanceDivs.get(id)?.setPointerCapture(e.pointerId); e.preventDefault();
+}
+function onResizePD(e,id){
+  if(e.button!==0)return; e.stopPropagation();
+  selectedInstId=id;
+  const inst=instances.find(i=>i.id===id); if(!inst)return;
+  const si=getSourceInfo();
+  instInteraction={type:'resize',id,startX:e.clientX,startY:e.clientY,origW:inst.w,origH:inst.h,moved:false,si};
+  instanceDivs.get(id)?.setPointerCapture(e.pointerId); e.preventDefault();
+}
+document.addEventListener('pointermove',e=>{
+  if(!instInteraction)return;
+  const inst=instances.find(i=>i.id===instInteraction.id); if(!inst)return;
+  const dxPx=e.clientX-instInteraction.startX,dyPx=e.clientY-instInteraction.startY;
+  if(Math.abs(dxPx)+Math.abs(dyPx)>3)instInteraction.moved=true;
+  if(!instInteraction.moved)return;
+  const el=instanceDivs.get(instInteraction.id); if(!el)return;
+  const{si}=instInteraction;
+  const du=dxPx/(si.z*si.a*si.W),dv=dyPx/(si.z*si.b*si.H);
+  if(instInteraction.type==='drag'){
+    inst._lx=Math.max(0,Math.min(1-inst.w,instInteraction.origX+du));
+    inst._ly=Math.max(0,Math.min(1-inst.h,instInteraction.origY+dv));
+    positionInstEl(el,{x:inst._lx,y:inst._ly,w:inst.w,h:inst.h});
+  } else {
+    inst._lw=Math.max(.02,instInteraction.origW+du); inst._lh=Math.max(.02,instInteraction.origH+dv);
+    positionInstEl(el,{x:inst.x,y:inst.y,w:inst._lw,h:inst._lh});
+  }
+});
+document.addEventListener('pointerup',e=>{
+  if(!instInteraction)return;
+  const inst=instances.find(i=>i.id===instInteraction.id);
+  if(inst){
+    if(instInteraction.moved){
+      if(instInteraction.type==='drag'){if(inst._lx!=null){inst.x=inst._lx;inst.y=inst._ly;}delete inst._lx;delete inst._ly;}
+      else{if(inst._lw!=null){inst.w=inst._lw;inst.h=inst._lh;}delete inst._lw;delete inst._lh;}
+    } else cycleState(inst.id);
+  }
+  instInteraction=null;
+});
+
+// ── Sidebar rendering ──
+function renderIxSidebar(){
+  ixNoTypes.style.display=assetTypes.length?'none':'';
+  ixTypeList.innerHTML='';
+  assetTypes.forEach(t=>{
+    const count=instances.filter(i=>i.typeId===t.id).length;
+    const card=document.createElement('div'); card.className='ix-type-card'+(stampTypeId===t.id?' stamping':'');
+    const header=document.createElement('div'); header.className='ix-type-header';
+    const nameIn=document.createElement('input'); nameIn.type='text'; nameIn.className='ix-type-name'; nameIn.value=t.name; nameIn.placeholder='Type name';
+    nameIn.addEventListener('input',()=>{t.name=nameIn.value;if(stampTypeId===t.id)ixStampTypeName.textContent=t.name;});
+    const cnt=document.createElement('span'); cnt.className='ix-count'; cnt.textContent=count?count+'×':'';
+    const delB=document.createElement('button'); delB.className='btn xs danger'; delB.textContent='✕';
+    delB.addEventListener('click',()=>removeAssetType(t.id));
+    header.append(nameIn,cnt,delB); card.appendChild(header);
+    const sl=document.createElement('div'); sl.className='ix-states-list';
+    t.states.forEach((s,idx)=>{
+      const row=document.createElement('div'); row.className='ix-state-row';
+      const num=document.createElement('span'); num.className='ix-state-num'; num.textContent=idx+1;
+      const pi=document.createElement('input'); pi.type='text'; pi.className='ix-state-path'; pi.value=s.path; pi.placeholder='Image path…';
+      pi.addEventListener('change',()=>setStatePath(t.id,idx,pi.value.trim()));
+      pi.addEventListener('keydown',e=>{if(e.key==='Enter')setStatePath(t.id,idx,pi.value.trim());});
+      const fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.style.display='none';
+      fi.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);pi.value=f.name;s.path=f.name;s.src=url;updateThumb(t.id,idx);refreshTypeImages(t.id);fi.value='';});
+      const bb=document.createElement('button'); bb.className='btn xs'; bb.textContent='↑'; bb.title='Browse';
+      bb.addEventListener('click',()=>fi.click());
+      const thumb=document.createElement('img'); thumb.className='ix-state-thumb'+(s.src?' visible':'');
+      thumb.dataset.tid=t.id; thumb.dataset.sidx=idx; if(s.src)thumb.src=s.src;
+      row.append(num,pi,bb,thumb,fi); sl.appendChild(row);
+    });
+    card.appendChild(sl);
+    const footer=document.createElement('div'); footer.className='ix-type-footer';
+    if(t.states.length<5){const a=document.createElement('button');a.className='btn xs';a.textContent='+ State';a.addEventListener('click',()=>addStateToType(t.id));footer.appendChild(a);}
+    if(t.states.length>1){const r=document.createElement('button');r.className='btn xs danger';r.textContent='− State';r.addEventListener('click',()=>removeStateFromType(t.id));footer.appendChild(r);}
+    footer.appendChild(Object.assign(document.createElement('span'),{style:'flex:1'}));
+    const sb=document.createElement('button'); sb.className='btn xs ix-stamp-btn'+(stampTypeId===t.id?' active':'');
+    sb.textContent=stampTypeId===t.id?'✓ Stamping…':'⊕ Stamp';
+    sb.addEventListener('click',()=>setStampType(stampTypeId===t.id?null:t.id));
+    footer.appendChild(sb); card.appendChild(footer);
+    ixTypeList.appendChild(card);
+  });
+}
+ixAddTypeBtn.addEventListener('click',addAssetType);
+
+// ── Keyboard shortcuts for overlay ──
+document.addEventListener('keydown',e=>{
+  if(document.activeElement.tagName==='INPUT')return;
+  if(e.key==='Escape')setStampType(null);
+  if((e.key==='Delete'||e.key==='Backspace')&&selectedInstId&&!stampTypeId)removeInstance(selectedInstId);
+  if((e.key==='c'||e.key==='C')&&(e.ctrlKey||e.metaKey)&&selectedInstId){
+    e.preventDefault(); const inst=instances.find(i=>i.id===selectedInstId);
+    if(inst)setStampType(inst.typeId,inst.w,inst.h);
+  }
+});
+
+// ── Output window hook ──
+window._drawOverlay=function(ctx,W,H){
+  const src=dbA.getDrawable()||dbB.getDrawable();
+  if(!src)return;
+  const sw=src.videoWidth||src.naturalWidth||src.width||1;
+  const sh=src.videoHeight||src.naturalHeight||src.height||1;
+  const dr=calcFitRect(sw,sh,W,H);
+  const z=zoom.level,vx0=zoom.panX-.5/z,vy0=zoom.panY-.5/z;
+  const a=dr.w/W,b=dr.h/H,bx=dr.x/W,by=dr.y/H;
+  instances.forEach(inst=>{
+    const el=instanceDivs.get(inst.id); if(!el)return;
+    const img=el.querySelector('img'); if(!img||!img.complete||!img.naturalWidth)return;
+    const ix=(bx+(inst.x-vx0)*z*a)*W;
+    const iy=(by+(inst.y-vy0)*z*b)*H;
+    const iw=inst.w*z*a*W,ih=inst.h*z*b*H;
+    ctx.drawImage(img,ix,iy,iw,ih);
+  });
+};
+
+// ── Ambient Audio ──
+const bgAudioEl    = document.getElementById('bg-audio-el');
+const bgAudioPath  = document.getElementById('bg-audio-path');
+const bgAudioBrowse= document.getElementById('bg-audio-browse');
+const bgAudioFileIn= document.getElementById('bg-audio-file-input');
+const bgAudioTrack = document.getElementById('bg-audio-track');
+const bgAudioPlay  = document.getElementById('bg-audio-play');
+const bgAudioPause = document.getElementById('bg-audio-pause');
+const bgAudioLoop  = document.getElementById('bg-audio-loop');
+const bgAudioVol   = document.getElementById('bg-audio-vol');
+const bgAudioVolVal= document.getElementById('bg-audio-vol-val');
+let bgAudioSrcPath = '';
+function loadBgAudio(src,name){bgAudioEl.src=src;bgAudioSrcPath=name||src;bgAudioPath.value=name||src;bgAudioTrack.textContent=name||src;bgAudioEl.load();}
+function syncBgAudioLoopBtn(){bgAudioLoop.classList.toggle('active',bgAudioEl.loop);}
+bgAudioBrowse.addEventListener('click',()=>bgAudioFileIn.click());
+bgAudioFileIn.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;loadBgAudio(URL.createObjectURL(f),f.name);bgAudioFileIn.value='';});
+bgAudioPath.addEventListener('keydown',e=>{if(e.key==='Enter'){const p=bgAudioPath.value.trim();if(p)loadBgAudio(p,p);}});
+bgAudioPath.addEventListener('change',()=>{const p=bgAudioPath.value.trim();if(p)loadBgAudio(p,p);});
+bgAudioPlay.addEventListener('click',()=>bgAudioEl.play().catch(()=>{}));
+bgAudioPause.addEventListener('click',()=>bgAudioEl.pause());
+bgAudioLoop.addEventListener('click',()=>{bgAudioEl.loop=!bgAudioEl.loop;syncBgAudioLoopBtn();});
+bgAudioVol.addEventListener('input',()=>{bgAudioEl.volume=bgAudioVol.value/100;bgAudioVolVal.textContent=bgAudioVol.value+'%';});
+bgAudioEl.volume=0.8; syncBgAudioLoopBtn();
+
+// ── Save/Load extensions ──
+window._getIxData=function(){
+  // Ensure current slot is synced before saving
+  const k=currentSlotKey();if(k)instancesBySlot[k]=instances;
+  return {
+    assetTypes:assetTypes.map(t=>({id:t.id,name:t.name,states:t.states.map(s=>({path:s.path}))})),
+    instancesBySlot:Object.fromEntries(Object.entries(instancesBySlot).map(([k,v])=>[k,[...v]])),
+    audioPath:bgAudioSrcPath,audioLoop:bgAudioEl.loop,audioVolume:bgAudioEl.volume,
+  };
+};
+window._applyIxData=async function(d){
+  if(!d)return;
+  instanceDivs.forEach(el=>el.remove());instanceDivs.clear();instances=[];instancesBySlot={};assetTypes=[];
+  for(const t of(d.assetTypes||[])){
+    const states=[];
+    for(const s of(t.states||[])){const src=s.path?await resolveImgPath(s.path):null;states.push({path:s.path||'',src});}
+    assetTypes.push({id:t.id,name:t.name||'Asset',states});
+  }
+  if(d.instancesBySlot){
+    for(const[k,arr]of Object.entries(d.instancesBySlot))instancesBySlot[k]=(arr||[]).map(i=>({...i}));
+  } else if(d.instances){
+    // Legacy: put all instances in current slot (or a temporary key)
+    const k=currentSlotKey()||'a-0';instancesBySlot[k]=(d.instances||[]).map(i=>({...i}));
+  }
+  const k=currentSlotKey();instances=k?(instancesBySlot[k]||[]):[];
+  if(d.audioPath)loadBgAudio(d.audioPath,d.audioPath);
+  if(d.audioLoop!==undefined){bgAudioEl.loop=d.audioLoop;syncBgAudioLoopBtn();}
+  if(d.audioVolume!==undefined){bgAudioEl.volume=d.audioVolume;bgAudioVol.value=Math.round(d.audioVolume*100);bgAudioVolVal.textContent=Math.round(d.audioVolume*100)+'%';}
+  renderInstances();renderIxSidebar();
+};
+
+// ── Zoom tracking: reposition every frame so stamps always follow the background ──
+(function ixRaf(){repositionInstances();requestAnimationFrame(ixRaf);})();
+window.addEventListener('resize',()=>repositionInstances());
+
+// ── Slot change hooks: switch instance set when active clip changes ──
+const _ixOrigActivate=activateLayerClip;
+activateLayerClip=function(){
+  const prev=currentSlotKey();
+  _ixOrigActivate.apply(this,arguments);
+  if(currentSlotKey()!==prev)switchSlot();
+};
+const _ixOrigDeactivate=deactivateLayer;
+deactivateLayer=function(){
+  const prev=currentSlotKey();
+  _ixOrigDeactivate.apply(this,arguments);
+  if(currentSlotKey()!==prev)switchSlot();
+};
+
+// ── Init ──
+renderIxSidebar();
+
+})();
+
 </script>
 
-<style>
-#vault-nav{position:fixed;bottom:14px;left:14px;z-index:9999;display:flex;gap:2px;background:rgba(9,9,11,.85);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:3px;}
-#vault-nav a{display:block;padding:5px 11px;border-radius:6px;font-family:'Inter',system-ui,sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none;transition:background .15s,color .15s;}
-#vault-nav a.active{background:#00e676;color:#09090b;}
-#vault-nav a:not(.active){color:rgba(255,255,255,.38);}
-#vault-nav a:not(.active):hover{color:rgba(255,255,255,.7);}
-</style>
-<nav id="vault-nav">
-  <a href="index.html" class="active">PROJECTION</a>
-  <a href="index-interactive.html">SCENE</a>
-</nav>
-
+<input type="file" id="bg-audio-file-input" accept="audio/*,video/*" style="display:none;">
+<audio id="bg-audio-el" loop></audio>
 </body>
 </html>
